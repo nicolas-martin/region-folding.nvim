@@ -1,30 +1,5 @@
 local M = {}
 
--- Language-specific comment patterns
-local language_comments = {
-    default = "//",
-    lua = "%-%-",
-    python = "#",
-    javascript = "//",
-    typescript = "//",
-    cpp = "//",
-    c = "//",
-    rust = "//",
-    go = "//",
-    java = "//",
-    php = "//",
-    ruby = "#",
-    perl = "#",
-    shell = "#",
-    bash = "#",
-    zsh = "#",
-    fish = "#",
-    yaml = "#",
-    toml = "#",
-    vim = "\""
-    -- Add more languages as needed
-}
-
 -- Default configuration
 local default_opt = {
     -- Region marker text (without comment syntax)
@@ -41,26 +16,6 @@ local default_opt = {
 -- Initialize with defaults immediately
 local opt = vim.deepcopy(default_opt)
 
--- Helper function to create pattern for a specific comment syntax
-local function create_region_pattern(comment_pattern)
-    local space_pattern = opt.space_after_comment and "[%s]*" or ""
-    return {
-        start_pattern = comment_pattern .. space_pattern .. opt.region_text.start .. "(.*)$",
-        end_pattern = comment_pattern .. space_pattern .. opt.region_text.ending
-    }
-end
-
--- Helper function to extract region title
-local function get_region_title(line, start_pattern)
-    local title = line:match(start_pattern)
-    if title then
-        -- Trim whitespace
-        title = title:gsub("^%s*(.-)%s*$", "%1")
-        return #title > 0 and title or nil
-    end
-    return nil
-end
-
 -- Setup function to initialize the plugin
 function M.setup(user_opt)
     if user_opt and user_opt.opts then
@@ -71,13 +26,6 @@ function M.setup(user_opt)
 
     -- Initialize treesitter module with options
     require('region-folding.treesitter').setup(opt)
-end
-
--- Get the comment markers for the current filetype
-local function get_markers()
-    local ft = vim.bo.filetype
-    local comment_pattern = language_comments[ft] or language_comments.default
-    return create_region_pattern(comment_pattern)
 end
 
 -- Function to determine fold level for a given line

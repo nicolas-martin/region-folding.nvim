@@ -2,7 +2,7 @@ local M = {}
 
 -- Language-specific comment patterns
 local language_comments = {
-    default = "#",
+    default = "//",
     lua = "%-%-",
     python = "#",
     javascript = "//",
@@ -26,7 +26,7 @@ local language_comments = {
 }
 
 -- Default configuration
-local default_config = {
+local default_opt = {
     -- Region marker text (without comment syntax)
     region_text = {
         start = "#region",
@@ -38,14 +38,15 @@ local default_config = {
     fold_indicator = "▼"
 }
 
-local config = default_config
+-- Initialize with defaults immediately
+local opt = vim.deepcopy(default_opt)
 
 -- Helper function to create pattern for a specific comment syntax
 local function create_region_pattern(comment_pattern)
-    local space_pattern = config.space_after_comment and "[%s]*" or ""
+    local space_pattern = opt.space_after_comment and "[%s]*" or ""
     return {
-        start_pattern = comment_pattern .. space_pattern .. config.region_text.start .. "(.*)$",
-        end_pattern = comment_pattern .. space_pattern .. config.region_text.ending
+        start_pattern = comment_pattern .. space_pattern .. opt.region_text.start .. "(.*)$",
+        end_pattern = comment_pattern .. space_pattern .. opt.region_text.ending
     }
 end
 
@@ -61,8 +62,12 @@ local function get_region_title(line, start_pattern)
 end
 
 -- Setup function to initialize the plugin
-function M.setup(opts)
-    config = vim.tbl_deep_extend("force", default_config, opts or {})
+function M.setup(user_opt)
+    if user_opt and user_opt.opts then
+        opt = vim.tbl_deep_extend("force", default_opt, user_opt.opts)
+    else
+        opt = vim.tbl_deep_extend("force", default_opt, user_opt or {})
+    end
 end
 
 -- Get the comment markers for the current filetype
@@ -101,9 +106,9 @@ function M.get_fold_text()
 
     -- Create fold text
     if title then
-        return string.format("%s %s (%s)", config.fold_indicator, title, lines_text)
+        return string.format("%s %s (%s)", opt.fold_indicator, title, lines_text)
     else
-        return string.format("%s folded region (%s)", config.fold_indicator, lines_text)
+        return string.format("%s folded region (%s)", opt.fold_indicator, lines_text)
     end
 end
 

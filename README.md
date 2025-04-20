@@ -16,7 +16,7 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ```lua
 {
-  "nma/region-folding.nvim",
+  "nicolas-martin/region-folding.nvim",
   event = { "BufReadPost", "BufNewFile" },
     config = function()
         require("region-folding").setup()
@@ -126,7 +126,7 @@ Out of the box support for:
 
 ## Configuration
 
-You can customize the region marker text and spacing:
+You can customize the region marker text, spacing, and fold indicator:
 
 ```lua
 require('region-folding').setup({
@@ -136,7 +136,9 @@ require('region-folding').setup({
         ending = "#endregion" -- Default: "#endregion"
     },
     -- Control spacing between comment and region text
-    space_after_comment = true -- Default: true
+    space_after_comment = true, -- Default: true
+    -- Customize the fold indicator symbol
+    fold_indicator = "▼"      -- Default: "▼"
 })
 ```
 
@@ -153,15 +155,3 @@ Example:
 ▼ Helper Functions (12 lines)
 ▼ HTTP Handlers (8 lines)
 ```
-
-## Tips
-
-1. Use descriptive region names to make navigation easier
-2. Organize related code blocks into regions
-3. Use nested regions for better code organization
-4. Use `zM` to get an overview of file structure
-5. Use `zj`/`zk` to quickly navigate between regions
-
-## License
-
-MIT 

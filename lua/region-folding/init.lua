@@ -33,7 +33,9 @@ local default_config = {
         ending = "#endregion"
     },
     -- Optional space between comment and region text
-    space_after_comment = true
+    space_after_comment = true,
+    -- Fold indicator symbol
+    fold_indicator = "▼"
 }
 
 local config = default_config
@@ -99,9 +101,9 @@ function M.get_fold_text()
 
     -- Create fold text
     if title then
-        return string.format("▼ %s (%s)", title, lines_text)
+        return string.format("%s %s (%s)", config.fold_indicator, title, lines_text)
     else
-        return string.format("▼ folded region (%s)", lines_text)
+        return string.format("%s folded region (%s)", config.fold_indicator, lines_text)
     end
 end
 

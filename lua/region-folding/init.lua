@@ -68,6 +68,9 @@ function M.setup(user_opt)
     else
         opt = vim.tbl_deep_extend("force", default_opt, user_opt or {})
     end
+
+    -- Initialize treesitter module with options
+    require('region-folding.treesitter').setup(opt)
 end
 
 -- Get the comment markers for the current filetype
@@ -79,36 +82,19 @@ end
 
 -- Function to determine fold level for a given line
 function M.get_fold_level(lnum)
-    local line = vim.fn.getline(lnum)
-    local markers = get_markers()
-
-    -- Check if line contains region markers
-    if line:match(markers.start_pattern) then
-        return "a1" -- Start a fold
-    elseif line:match(markers.end_pattern) then
-        return "s1" -- End a fold
-    end
-
-    return "=" -- Use previous fold level
+    return require('region-folding.treesitter').get_fold_level(lnum)
 end
 
 -- Function to create fold text
 function M.get_fold_text()
-    local line = vim.fn.getline(vim.v.foldstart)
-    local markers = get_markers()
-
-    -- Extract region title
-    local title = get_region_title(line, markers.start_pattern)
-
-    -- Count number of folded lines
-    local lines_count = vim.v.foldend - vim.v.foldstart + 1
-    local lines_text = lines_count .. " lines"
+    local ts = require('region-folding.treesitter')
+    local title, lines_count = ts.get_fold_text(vim.v.foldstart)
 
     -- Create fold text
     if title then
-        return string.format("%s %s (%s)", opt.fold_indicator, title, lines_text)
+        return string.format("%s %s (%d lines)", opt.fold_indicator, title, lines_count)
     else
-        return string.format("%s folded region (%s)", opt.fold_indicator, lines_text)
+        return string.format("%s folded region (%d lines)", opt.fold_indicator, vim.v.foldend - vim.v.foldstart + 1)
     end
 end
 

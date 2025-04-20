@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+# Get directory containing this script
+SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+BASE_DIR="$( cd "$SCRIPTS_DIR/.." && pwd )"
+
+# Create temporary config directory
+TMP_CONFIG_DIR=$(mktemp -d)
+trap 'rm -rf "$TMP_CONFIG_DIR"' EXIT
+
+# Set clean environment
+export XDG_CONFIG_HOME="$TMP_CONFIG_DIR"
+export XDG_DATA_HOME="$TMP_CONFIG_DIR/data"
+
+# Run tests using plenary.nvim
+nvim --headless --noplugin \
+  -u "$BASE_DIR/tests/minimal_init.lua" \
+  -c "lua require('plenary.test_harness').test_directory('$BASE_DIR/tests/')" \
+  -c "lua vim.fn.system({'rm', '-rf', _G.test_deps.plenary_root})" \
+  -c "qa!"
+
+# Get the exit code
+EXIT_CODE=$?
+
+# Additional cleanup in case Neovim exits unexpectedly
+if [ -d ~/.local/share/nvim/site/pack/vendor/start/plenary.nvim ]; then
+    rm -rf ~/.local/share/nvim/site/pack/vendor/start/plenary.nvim
+fi
+
+exit $EXIT_CODE 

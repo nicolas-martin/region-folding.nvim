@@ -97,7 +97,7 @@ function M.get_fold_level(lnum)
 
 			-- If evaluation succeeded and returned a valid fold level
 			if ok and result ~= nil and result ~= -1 then
-				-- Increment treesitter fold levels so regions are at level 1 and treesitter at 2+
+				-- Adjust treesitter fold levels so regions are at level 1 and treesitter at 2+
 				if type(result) == "number" and result > 0 then
 					result = result + 1
 				elseif type(result) == "string" and result:match("^>%d+$") then
@@ -106,6 +106,12 @@ function M.get_fold_level(lnum)
 				elseif type(result) == "string" and result:match("^<%d+$") then
 					local level = tonumber(result:match("%d+"))
 					result = "<" .. (level + 1)
+				elseif type(result) == "string" and result:match("^a%d+$") then
+					local level = tonumber(result:match("%d+"))
+					result = "a" .. (level + 1)
+				elseif type(result) == "string" and result:match("^s%d+$") then
+					local level = tonumber(result:match("%d+"))
+					result = "s" .. (level + 1)
 				end
 				log("Using adjusted original fold level: %s", result)
 				return result
@@ -183,6 +189,14 @@ local function setup_autocommands()
 
 			-- Refresh folding
 			vim.cmd("silent! normal! zx")
+			
+			-- Close region folds by default
+			vim.schedule(function()
+				for _, region in ipairs(regions) do
+					vim.cmd(string.format("silent! %dfoldclose", region.start))
+				end
+			end)
+			
 			log("Set up region folding for buffer")
 		end
 	})

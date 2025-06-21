@@ -178,10 +178,10 @@ function M.get_fold_level(lnum)
 		log("Region: start=%d, end=%d", region.start, region.ending)
 		if lnum == region.start then
 			log("Line %d is region start", lnum)
-			return "a1" -- Start fold
+			return ">1" -- Start fold at level 1
 		elseif lnum == region.ending then
 			log("Line %d is region end", lnum)
-			return "s1" -- End fold
+			return "<1" -- End fold at level 1
 		end
 	end
 

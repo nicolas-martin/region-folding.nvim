@@ -31,8 +31,7 @@ end
 plugin.setup({
 	region_text = { start = "#region", ending = "#endregion" },
 	space_after_comment = true,
-	fold_indicator = "▼",
-	debug = false,
+	fold_indicator = "▼"
 })
 
 -- Define signs for region markers

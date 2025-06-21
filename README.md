@@ -2,6 +2,8 @@
 
 A minimal Neovim plugin for custom code folding using region markers. Automatically folds regions while preserving treesitter folding for functions and other code structures.
 
+![Region Folding Example](./assets/region-folding-example.png)
+
 ## Features
 
 - **Custom region folding** with `#region` / `#endregion` markers
@@ -29,32 +31,82 @@ A minimal Neovim plugin for custom code folding using region markers. Automatica
   event = { "BufReadPost", "BufNewFile" },
   opts = {
     region_text = { start = "#region", ending = "#endregion" },
-    fold_indicator = "▼",
-    debug = false
+    fold_indicator = "▼"
   }
 }
 ```
 
 ## Usage
 
-Add region markers to your code:
+Add region markers to organize your code:
 
 ```go
-// #region Configuration Types
-type Config struct {
-    Host string `json:"host"`
-    Port int    `json:"port"`
+package main
+
+import (
+    "database/sql"
+    "log" 
+    "net/http"
+)
+
+// #region Configuration Constants
+const (
+    DefaultPort = 8080
+    MaxRetries  = 3
+)
+// #endregion
+
+// #region Database Types  
+type User struct {
+    ID       int    `json:"id"`
+    Username string `json:"username"`
+    Email    string `json:"email"`
 }
 // #endregion
 
-func main() {  // This function can also be folded with treesitter
-    // Your code here
+// #region Database Methods
+func NewDatabase(dsn string) (*Database, error) {
+    conn, err := sql.Open(dbDriver, dsn)
+    if err != nil {
+        return nil, err
+    }
+    return &Database{conn: conn}, nil
+}
+
+func (db *Database) GetUser(id int) (*User, error) {
+    // Implementation...
+}
+// #endregion
+
+// #region HTTP Handlers
+func handleGetUser(w http.ResponseWriter, r *http.Request) {
+    // Handler implementation...
+}
+
+func handleCreateUser(w http.ResponseWriter, r *http.Request) {
+    // Handler implementation...
+}
+// #endregion
+
+func main() {
+    // #region Server Setup
+    db, err := NewDatabase("postgres://...")
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    http.HandleFunc("/users", handleGetUser)
+    log.Fatal(http.ListenAndServe(":8080", nil))
+    // #endregion
 }
 ```
 
 **Result:**
-- `▼ Configuration Types (8 lines)` ← Region fold (auto-folded)
-- `▼ main() (15 lines)` ← Function fold (visible by default, foldable with `za`)
+- `▼ Configuration Constants (8 lines)` ← Auto-folded
+- `▼ Database Types (12 lines)` ← Auto-folded  
+- `▼ Database Methods (16 lines)` ← Auto-folded
+- `▼ HTTP Handlers (16 lines)` ← Auto-folded
+- `func main() { ... ▼ Server Setup (12 lines) }` ← Function visible, nested region auto-folded
 
 ## Fold Commands
 
@@ -64,14 +116,3 @@ func main() {  // This function can also be folded with treesitter
 | `zj` / `zk` | Navigate to next/previous fold |
 | `zR` | Open all folds |
 | `zM` | Close all folds |
-
-## Supported Languages
-
-JavaScript, TypeScript, Python, Go, Lua, Rust, C/C++, Java, PHP, Ruby, Shell, YAML, TOML, and more.
-
-## How It Works
-
-1. **Regions auto-fold** on file open
-2. **Functions stay visible** (can be manually folded)
-3. **Smart fold text** shows region titles and function names
-4. **Navigate seamlessly** between all fold types

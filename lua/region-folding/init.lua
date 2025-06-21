@@ -10,9 +10,7 @@ local default_opt = {
 	-- Optional space between comment and region text
 	space_after_comment = true,
 	-- Fold indicator symbol
-	fold_indicator = "▼",
-	-- Debug mode
-	debug = false
+	fold_indicator = "▼"
 }
 
 -- Initialize with defaults immediately
@@ -20,15 +18,6 @@ local opt = vim.deepcopy(default_opt)
 
 -- Store original fold settings for each buffer
 local original_fold_settings = {}
-
--- Debug logging function
-local function log(msg, ...)
-	if opt.debug then
-		local info = debug.getinfo(2, "Sl")
-		local lineinfo = info.short_src .. ":" .. info.currentline
-		print(string.format("[region-folding:%s] " .. msg, lineinfo, ...))
-	end
-end
 
 -- Setup function to initialize the plugin
 function M.setup(user_opt)
@@ -60,22 +49,16 @@ function M.get_fold_level(lnum)
 	local bufnr = vim.api.nvim_get_current_buf()
 	local original_settings = original_fold_settings[bufnr]
 
-	log("Checking fold level for line %d", lnum)
-	log("Original fold settings: %s", original_settings and vim.inspect(original_settings) or "none")
-
 	-- First check if this line has a region marker
 	local region_result = require('region-folding.treesitter').get_fold_level(lnum)
-	log("Region folding result: %s", region_result)
 
 	-- If we found a region marker, use it
 	if region_result ~= "=" then
-		log("Using region fold level: %s", region_result)
 		return region_result
 	end
 
 	-- Check if we're inside a region
 	if is_inside_region(lnum) then
-		log("Line %d is inside a region, using default fold level", lnum)
 		return "="
 	end
 
@@ -92,8 +75,6 @@ function M.get_fold_level(lnum)
 			local ok, result = pcall(vim.api.nvim_eval, original_settings.foldexpr)
 			-- Restore v:lnum
 			vim.v.lnum = saved_v_lnum
-
-			log("Original foldexpr evaluation: ok=%s, result=%s", ok, result)
 
 			-- If evaluation succeeded and returned a valid fold level
 			if ok and result ~= nil and result ~= -1 then
@@ -113,7 +94,6 @@ function M.get_fold_level(lnum)
 					local level = tonumber(result:match("%d+"))
 					result = "s" .. (level + 1)
 				end
-				log("Using adjusted original fold level: %s", result)
 				return result
 			end
 		elseif original_settings.foldmethod == "indent" then
@@ -130,7 +110,6 @@ function M.get_fold_level(lnum)
 	end
 
 	-- Default to maintaining current fold level
-	log("Using default fold level: =")
 	return "="
 end
 
@@ -215,8 +194,6 @@ local function setup_autocommands()
 			local current_foldexpr = vim.wo.foldexpr
 			local current_foldmethod = vim.wo.foldmethod
 
-			log("Buffer entered: %d, Current foldexpr: %s, foldmethod: %s", bufnr, current_foldexpr, current_foldmethod)
-
 			-- Only store the original fold settings if they're not our own
 			if not original_fold_settings[bufnr] and current_foldexpr ~=
 				"v:lua.require'region-folding'.get_fold_level(v:lnum)" then
@@ -224,7 +201,6 @@ local function setup_autocommands()
 					foldmethod = current_foldmethod,
 					foldexpr = current_foldexpr
 				}
-				log("Stored original fold settings: method=%s, expr=%s", current_foldmethod, current_foldexpr)
 			end
 
 			-- Check if we have region markers in this buffer
@@ -232,10 +208,7 @@ local function setup_autocommands()
 			local regions = ts.get_regions()
 			
 			if #regions == 0 then
-				log("No region markers found, keeping original folding method: %s", current_foldmethod)
 				return
-			else
-				log("Found %d region markers, setting up region folding", #regions)
 			end
 
 			-- Set up fold settings for the buffer only if we have regions
@@ -252,8 +225,6 @@ local function setup_autocommands()
 					vim.cmd(string.format("silent! %dfoldclose", region.start))
 				end
 			end)
-			
-			log("Set up region folding for buffer")
 		end
 	})
 
@@ -261,7 +232,6 @@ local function setup_autocommands()
 	vim.api.nvim_create_autocmd("BufDelete", {
 		group = group,
 		callback = function(args)
-			log("Buffer deleted, cleaning up: %d", args.buf)
 			original_fold_settings[args.buf] = nil
 		end
 	})

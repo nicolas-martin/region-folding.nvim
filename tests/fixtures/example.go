@@ -69,8 +69,7 @@ func handleConfig(w http.ResponseWriter, r *http.Request) {
 // #endregion
 
 // #region Utility Functions
-func loadConfig(filepath string) (*Config, error) {
-	// Implementation would load from file
+func loadConfig() (*Config, error) {
 	return &defaultConfig, nil
 }
 
@@ -84,6 +83,9 @@ func validateConfig(config *Config) error {
 	return nil
 }
 
+// #endregion
+
+// #region Routes
 func setupRoutes() {
 	http.HandleFunc("/health", handleHealth)
 	http.HandleFunc("/api", handleAPI)
@@ -93,7 +95,7 @@ func setupRoutes() {
 // #endregion
 
 func main() {
-	config, err := loadConfig("config.json")
+	config, err := loadConfig()
 	if err != nil {
 		log.Fatal("Failed to load config:", err)
 	}
@@ -113,6 +115,5 @@ func main() {
 }
 
 func init() {
-	// This function can be used for any initialization logic
 	log.Println("Initializing application...")
 }

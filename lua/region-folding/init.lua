@@ -134,16 +134,72 @@ function M.get_fold_level(lnum)
 	return "="
 end
 
+-- Function to extract treesitter-based fold text (like function names)
+local function get_treesitter_fold_text(start_line)
+	local bufnr = vim.api.nvim_get_current_buf()
+	local line_text = vim.api.nvim_buf_get_lines(bufnr, start_line - 1, start_line, false)[1]
+	
+	if not line_text then
+		return nil
+	end
+	
+	-- Extract function names for different languages
+	local patterns = {
+		-- Go: func functionName(
+		go = "func%s+([%w_]+)%s*%(",
+		-- JavaScript/TypeScript: function functionName( or const functionName = 
+		javascript = "function%s+([%w_]+)%s*%(", 
+		typescript = "function%s+([%w_]+)%s*%(",
+		-- Python: def function_name(
+		python = "def%s+([%w_]+)%s*%(", 
+		-- C/C++: returnType functionName(
+		c = "%w+%s+([%w_]+)%s*%(", 
+		cpp = "%w+%s+([%w_]+)%s*%(", 
+		-- Lua: function functionName( or local function functionName(
+		lua = "function%s+([%w_%.]+)%s*%(", 
+		-- Rust: fn function_name(
+		rust = "fn%s+([%w_]+)%s*%(", 
+		-- Java: modifier returnType functionName(
+		java = "%w+%s+%w+%s+([%w_]+)%s*%(", 
+	}
+	
+	local ft = vim.bo.filetype
+	local pattern = patterns[ft]
+	
+	if pattern then
+		local func_name = line_text:match(pattern)
+		if func_name then
+			return func_name
+		end
+	end
+	
+	-- Fallback: try to extract any identifier before parentheses
+	local fallback_name = line_text:match("([%w_]+)%s*%(")
+	if fallback_name then
+		return fallback_name
+	end
+	
+	return nil
+end
+
 -- Function to create fold text
 function M.get_fold_text()
 	local ts = require('region-folding.treesitter')
 	local title, lines_count = ts.get_fold_text(vim.v.foldstart)
+	local fold_lines = vim.v.foldend - vim.v.foldstart + 1
 
 	-- Create fold text
 	if title then
+		-- This is a region fold
 		return string.format("%s %s (%d lines)", opt.fold_indicator, title, lines_count)
 	else
-		return string.format("%s folded region (%d lines)", opt.fold_indicator, vim.v.foldend - vim.v.foldstart + 1)
+		-- Try to get treesitter fold text (like function name)
+		local func_name = get_treesitter_fold_text(vim.v.foldstart)
+		if func_name then
+			return string.format("%s %s() (%d lines)", opt.fold_indicator, func_name, fold_lines)
+		else
+			return string.format("%s folded region (%d lines)", opt.fold_indicator, fold_lines)
+		end
 	end
 end
 

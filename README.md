@@ -36,77 +36,17 @@ A minimal Neovim plugin for custom code folding using region markers. Automatica
 }
 ```
 
-## Usage
+## Configuration
 
-Add region markers to organize your code:
-
-```go
-package main
-
-import (
-    "database/sql"
-    "log" 
-    "net/http"
-)
-
-// #region Configuration Constants
-const (
-    DefaultPort = 8080
-    MaxRetries  = 3
-)
-// #endregion
-
-// #region Database Types  
-type User struct {
-    ID       int    `json:"id"`
-    Username string `json:"username"`
-    Email    string `json:"email"`
-}
-// #endregion
-
-// #region Database Methods
-func NewDatabase(dsn string) (*Database, error) {
-    conn, err := sql.Open(dbDriver, dsn)
-    if err != nil {
-        return nil, err
-    }
-    return &Database{conn: conn}, nil
-}
-
-func (db *Database) GetUser(id int) (*User, error) {
-    // Implementation...
-}
-// #endregion
-
-// #region HTTP Handlers
-func handleGetUser(w http.ResponseWriter, r *http.Request) {
-    // Handler implementation...
-}
-
-func handleCreateUser(w http.ResponseWriter, r *http.Request) {
-    // Handler implementation...
-}
-// #endregion
-
-func main() {
-    // #region Server Setup
-    db, err := NewDatabase("postgres://...")
-    if err != nil {
-        log.Fatal(err)
-    }
-    
-    http.HandleFunc("/users", handleGetUser)
-    log.Fatal(http.ListenAndServe(":8080", nil))
-    // #endregion
-}
+**Required fold settings in your `init.lua` or `options.lua`:**
+```lua
+-- Enable treesitter folding (required for function folding)
+vim.opt.foldmethod = "expr"
+vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+vim.opt.foldenable = true
+vim.opt.foldlevel = 99
+vim.opt.foldlevelstart = 99
 ```
-
-**Result:**
-- `▼ Configuration Constants (8 lines)` ← Auto-folded
-- `▼ Database Types (12 lines)` ← Auto-folded  
-- `▼ Database Methods (16 lines)` ← Auto-folded
-- `▼ HTTP Handlers (16 lines)` ← Auto-folded
-- `func main() { ... ▼ Server Setup (12 lines) }` ← Function visible, nested region auto-folded
 
 ## Fold Commands
 
@@ -116,3 +56,14 @@ func main() {
 | `zj` / `zk` | Navigate to next/previous fold |
 | `zR` | Open all folds |
 | `zM` | Close all folds |
+
+## Troubleshooting
+
+**Functions not folding, only regions work:**
+- Ensure treesitter folding is enabled (see Configuration section above)
+- Install language parsers: `:TSInstall <language>`
+- Verify treesitter is working: `:checkhealth nvim-treesitter`
+
+**No folding at all:**
+- Check fold settings: `:set foldmethod? foldexpr?`
+- Verify plugin loaded: `:lua print(require('region-folding'))`

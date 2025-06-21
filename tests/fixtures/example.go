@@ -111,3 +111,8 @@ func main() {
 		log.Fatal("Server failed to start:", err)
 	}
 }
+
+func init() {
+	// This function can be used for any initialization logic
+	log.Println("Initializing application...")
+}

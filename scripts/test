@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-# Run tests using plenary.nvim
-nvim --headless --noplugin -u tests/minimal_treesitter.lua -c "lua require('plenary.busted').run('tests/treesitter_fold_spec.lua')" -c 'qa!'

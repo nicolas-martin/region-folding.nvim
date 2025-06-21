@@ -1,172 +1,77 @@
 # region-folding.nvim
 
-A Neovim plugin that enables code folding using region markers in comments across multiple programming languages. The plugin automatically detects language-specific comment syntax and allows you to organize your code into collapsible regions.
-
-![Region Folding Example](./assets/region-folding-example.png)
+A minimal Neovim plugin for custom code folding using region markers. Automatically folds regions while preserving treesitter folding for functions and other code structures.
 
 ## Features
 
-- Automatic code folding based on region markers in comments
-- Support for 20+ programming languages out of the box
-- Smart detection of language-specific comment syntax
-- Descriptive fold text showing region titles and line counts
-- Minimal configuration required
+- **Custom region folding** with `#region` / `#endregion` markers
+- **Smart fold text** showing region names and function names  
+- **Treesitter compatibility** - works alongside existing fold methods
+- **Multi-language support** - 20+ languages out of the box
+- **Intelligent navigation** with `zj`/`zk` between all fold types
+- **Auto-fold regions** while keeping functions visible by default
 
 ## Installation
 
-Default configuration:
+**Lazy.nvim:**
 ```lua
 {
   "nicolas-martin/region-folding.nvim",
   event = { "BufReadPost", "BufNewFile" },
+  opts = {} -- Use defaults
+}
+```
+
+**With custom options:**
+```lua
+{
+  "nicolas-martin/region-folding.nvim", 
+  event = { "BufReadPost", "BufNewFile" },
   opts = {
-    -- Region marker text (without comment syntax)
-    region_text = {
-      start = "#region",
-      ending = "#endregion",
-    },
-    -- Control spacing between comment and region text
-    space_after_comment = true,
-    -- Customize the fold indicator symbol
+    region_text = { start = "#region", ending = "#endregion" },
     fold_indicator = "▼",
-  },
+    debug = false
+  }
 }
 ```
 
 ## Usage
 
-### Region Markers
-
-The plugin recognizes region markers in the following format:
-```
-<comment_char> #region [description]
-code to fold...
-<comment_char> #endregion
-```
-
-Examples in different languages:
-
-```javascript
-// #region Database Configuration
-const config = {
-    host: 'localhost',
-    port: 3000
-};
-// #endregion
-```
-
-```python
-# #region Helper Functions
-def validate_input(data):
-    pass
-
-def process_data(data):
-    pass
-# #endregion
-```
-
-```lua
--- #region Plugin Setup
-local config = {
-    enabled = true,
-    debug = false
-}
--- #endregion
-```
+Add region markers to your code:
 
 ```go
-// #region HTTP Handlers
-func handleGetUser(w http.ResponseWriter, r *http.Request) {
-    // Implementation
-}
-
-func handleCreateUser(w http.ResponseWriter, r *http.Request) {
-    // Implementation
+// #region Configuration Types
+type Config struct {
+    Host string `json:"host"`
+    Port int    `json:"port"`
 }
 // #endregion
-```
 
-### Default Fold Navigation
-
-#### Opening and Closing Folds
-
-| Command | Description |
-|---------|-------------|
-| `zo` | Open fold under cursor |
-| `zc` | Close fold under cursor |
-| `za` | Toggle fold under cursor |
-| `zO` | Open all folds under cursor recursively |
-| `zC` | Close all folds under cursor recursively |
-| `zA` | Toggle all folds under cursor recursively |
-
-#### Global Fold Operations
-
-| Command | Description |
-|---------|-------------|
-| `zR` | Open all folds in the file |
-| `zM` | Close all folds in the file |
-| `zr` | Reduce folding by one level throughout the file |
-| `zm` | Increase folding by one level throughout the file |
-
-#### Moving Between Folds
-
-| Command | Description |
-|---------|-------------|
-| `zj` | Move to next fold |
-| `zk` | Move to previous fold |
-| `]z` | Move to end of current open fold |
-| `[z` | Move to start of current open fold |
-
-### Supported Languages
-
-Out of the box support for:
-- JavaScript/TypeScript (`// #region`)
-- Python (`# #region`)
-- Lua (`-- #region`)
-- Go (`// #region`)
-- Ruby (`# #region`)
-- PHP (`// #region`)
-- C/C++ (`// #region`)
-- Java (`// #region`)
-- Rust (`// #region`)
-- Shell scripts (`# #region`)
-- YAML/TOML (`# #region`)
-- And more...
-
-## Configuration
-
-The plugin accepts the following options:
-
-```lua
-opts = {
-  -- Region marker text (without comment syntax)
-  region_text = {
-    start = "#region",    -- Default: "#region"
-    ending = "#endregion" -- Default: "#endregion"
-  },
-  -- Control spacing between comment and region text
-  space_after_comment = true, -- Default: true
-  -- Customize the fold indicator symbol
-  fold_indicator = "▼",      -- Default: "▼"
+func main() {  // This function can also be folded with treesitter
+    // Your code here
 }
 ```
 
-## Fold Display
+**Result:**
+- `▼ Configuration Types (8 lines)` ← Region fold (auto-folded)
+- `▼ main() (15 lines)` ← Function fold (visible by default, foldable with `za`)
 
-When a region is folded, it shows:
-- The region description (if provided)
-- The number of lines folded
-- A fold indicator (customizable via the `fold_indicator` opt)
+## Fold Commands
 
-The plugin uses a distinct visual style for fold indicators:
-- Folded regions show as `▼` by default (customizable)
-- The fold indicator appears at the start of each folded region
-- Nested regions are indented to show hierarchy
+| Command | Description |
+|---------|-------------|
+| `za` | Toggle fold at cursor |
+| `zj` / `zk` | Navigate to next/previous fold |
+| `zR` | Open all folds |
+| `zM` | Close all folds |
 
-Example of how folded regions appear:
-```
-▼ Configuration Constants (8 lines)
-▼ Database Types (12 lines)
-▼ HTTP Handlers (16 lines)
-▼ Server Setup (12 lines)
-```
+## Supported Languages
+
+JavaScript, TypeScript, Python, Go, Lua, Rust, C/C++, Java, PHP, Ruby, Shell, YAML, TOML, and more.
+
+## How It Works
+
+1. **Regions auto-fold** on file open
+2. **Functions stay visible** (can be manually folded)
+3. **Smart fold text** shows region titles and function names
+4. **Navigate seamlessly** between all fold types

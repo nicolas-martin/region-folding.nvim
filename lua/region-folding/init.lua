@@ -61,7 +61,7 @@ function M.get_fold_level(lnum)
 	end
 
 	-- If there's an original foldexpr and no region marker, evaluate it
-	if original_foldexpr and original_foldexpr ~= "" then
+	if original_foldexpr and original_foldexpr ~= "" and original_foldexpr ~= "0" then
 		-- Save current line number
 		local saved_v_lnum = vim.v.lnum
 		-- Set v:lnum for the original foldexpr
@@ -119,16 +119,16 @@ local function setup_autocommands()
 				log("Stored original foldexpr: %s", current_foldexpr)
 			end
 
-			-- Don't override if treesitter folding is active and working
+			-- Check if we have region markers in this buffer before overriding treesitter
 			if current_foldexpr == "nvim_treesitter#foldexpr()" then
-				local saved_v_lnum = vim.v.lnum
-				vim.v.lnum = 1
-				local ok, result = pcall(vim.api.nvim_eval, current_foldexpr)
-				vim.v.lnum = saved_v_lnum
-
-				if ok and result ~= nil and result ~= -1 and result ~= "=" and result ~= 0 and result ~= "0" then
-					log("Treesitter folding is active and working, not overriding")
+				local ts = require('region-folding.treesitter')
+				local regions = ts.get_regions()
+				
+				if #regions == 0 then
+					log("No region markers found, keeping treesitter folding")
 					return
+				else
+					log("Found %d region markers, overriding treesitter folding", #regions)
 				end
 			end
 
@@ -138,7 +138,7 @@ local function setup_autocommands()
 			vim.wo.foldtext = "v:lua.require'region-folding'.get_fold_text()"
 
 			-- Refresh folding
-			vim.cmd("normal! zx")
+			vim.cmd("silent! normal! zx")
 			log("Set up region folding for buffer")
 		end
 	})

@@ -162,15 +162,20 @@ function M.get_fold_level(lnum)
 	local current_buf = vim.api.nvim_get_current_buf()
 	
 	-- Cache regions for performance, but make sure we're using the right buffer
-	if not M.cached_regions or M.cached_buffer ~= current_buf then
-		log("Refreshing regions cache for buffer %d", current_buf)
+	if not M.cached_regions or M.cached_buffer ~= current_buf or #M.cached_regions == 0 then
+		log("Refreshing regions cache for buffer %d (cached_regions: %s, cached_buffer: %s, regions_count: %d)", 
+		    current_buf, 
+		    M.cached_regions and "exists" or "nil", 
+		    M.cached_buffer or "nil",
+		    M.cached_regions and #M.cached_regions or 0)
 		M.cached_regions = M.get_regions()
 		M.cached_buffer = current_buf
 		log("Cached %d regions for buffer %d", #M.cached_regions, current_buf)
 	end
 
-
+	log("Checking line %d against %d cached regions", lnum, #M.cached_regions)
 	for _, region in ipairs(M.cached_regions) do
+		log("Region: start=%d, end=%d", region.start, region.ending)
 		if lnum == region.start then
 			log("Line %d is region start", lnum)
 			return "a1" -- Start fold

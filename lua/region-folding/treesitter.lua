@@ -132,11 +132,13 @@ end
 -- Get fold level for a line
 function M.get_fold_level(lnum)
 	local current_buf = vim.api.nvim_get_current_buf()
+	local changedtick = vim.api.nvim_buf_get_changedtick(current_buf)
 	
-	-- Cache regions for performance, but make sure we're using the right buffer
-	if not M.cached_regions or M.cached_buffer ~= current_buf or #M.cached_regions == 0 then
+	-- Cache regions for performance, but invalidate on buffer or content changes
+	if not M.cached_regions or M.cached_buffer ~= current_buf or M.cached_changedtick ~= changedtick then
 		M.cached_regions = M.get_regions()
 		M.cached_buffer = current_buf
+		M.cached_changedtick = changedtick
 	end
 
 	for _, region in ipairs(M.cached_regions) do
@@ -152,10 +154,14 @@ end
 
 -- Get fold text for a region
 function M.get_fold_text(start_line)
-	-- Cache regions for performance
-	if not M.cached_regions or M.cached_buffer ~= vim.api.nvim_get_current_buf() then
+	local current_buf = vim.api.nvim_get_current_buf()
+	local changedtick = vim.api.nvim_buf_get_changedtick(current_buf)
+	
+	-- Cache regions for performance, but invalidate on buffer or content changes
+	if not M.cached_regions or M.cached_buffer ~= current_buf or M.cached_changedtick ~= changedtick then
 		M.cached_regions = M.get_regions()
-		M.cached_buffer = vim.api.nvim_get_current_buf()
+		M.cached_buffer = current_buf
+		M.cached_changedtick = changedtick
 	end
 
 	-- Find the region that starts at this line
@@ -173,12 +179,14 @@ function M.setup(opt)
 	M.opt = opt
 	M.cached_regions = nil
 	M.cached_buffer = nil
+	M.cached_changedtick = nil
 end
 
 -- Clear cache (useful for testing)
 function M.clear_cache()
 	M.cached_regions = nil
 	M.cached_buffer = nil
+	M.cached_changedtick = nil
 end
 
 return M

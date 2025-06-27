@@ -203,15 +203,7 @@ local function setup_autocommands()
 				}
 			end
 
-			-- Check if we have region markers in this buffer
-			local ts = require('region-folding.treesitter')
-			local regions = ts.get_regions()
-			
-			if #regions == 0 then
-				return
-			end
-
-			-- Set up fold settings for the buffer only if we have regions
+			-- Always set up region-folding for hybrid folding (works with or without regions)
 			vim.wo.foldmethod = "expr"
 			vim.wo.foldexpr = "v:lua.require'region-folding'.get_fold_level(v:lnum)"
 			vim.wo.foldtext = "v:lua.require'region-folding'.get_fold_text()"
@@ -219,12 +211,25 @@ local function setup_autocommands()
 			-- Refresh folding
 			vim.cmd("silent! normal! zx")
 			
-			-- Close region folds by default
-			vim.schedule(function()
-				for _, region in ipairs(regions) do
-					vim.cmd(string.format("silent! %dfoldclose", region.start))
-				end
-			end)
+			-- Close region folds by default if any exist
+			local ts = require('region-folding.treesitter')
+			local regions = ts.get_regions()
+			if #regions > 0 then
+				vim.schedule(function()
+					for _, region in ipairs(regions) do
+						vim.cmd(string.format("silent! %dfoldclose", region.start))
+					end
+				end)
+			end
+		end
+	})
+
+	-- Clear cache on buffer write to ensure fresh region detection
+	vim.api.nvim_create_autocmd("BufWritePost", {
+		group = group,
+		callback = function()
+			local ts = require('region-folding.treesitter')
+			ts.clear_cache()
 		end
 	})
 

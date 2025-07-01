@@ -32,10 +32,8 @@ function M.setup(user_opt)
 end
 
 -- Check if a line is inside any region
-local function is_inside_region(lnum)
-	local ts = require('region-folding.treesitter')
-	local regions = ts.get_regions()
-	
+local function is_inside_region(lnum, regions)
+	-- Pass regions table to avoid re-calculating it
 	for _, region in ipairs(regions) do
 		if lnum > region.start and lnum < region.ending then
 			return true
@@ -48,9 +46,13 @@ end
 function M.get_fold_level(lnum)
 	local bufnr = vim.api.nvim_get_current_buf()
 	local original_settings = original_fold_settings[bufnr]
+	local ts = require('region-folding.treesitter')
+
+	-- Get cached regions once
+	local regions = ts.get_cached_regions()
 
 	-- First check if this line has a region marker
-	local region_result = require('region-folding.treesitter').get_fold_level(lnum)
+	local region_result = ts.get_fold_level(lnum)
 
 	-- If we found a region marker, use it
 	if region_result ~= "=" then
@@ -58,7 +60,7 @@ function M.get_fold_level(lnum)
 	end
 
 	-- Check if we're inside a region
-	if is_inside_region(lnum) then
+	if is_inside_region(lnum, regions) then
 		return "="
 	end
 

@@ -2,8 +2,7 @@
 
 A minimal Neovim plugin for custom code folding using region markers. Automatically folds regions while preserving treesitter folding for functions and other code structures.
 
-
-<img src="./assets/region-folding-example.png" alt="Region Folding Example" width=60% height=60%>
+![exanmple](./assets/region-folding-example.png)
 
 
 ## Features
